@@ -4,26 +4,86 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>China's One-Child Policy: A Visual Story</title>
+    <title>China's One Child Policy Is Not What You Think.</title>
 
-    <!-- link to css file -->
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Link to CSS file -->
     <link rel="stylesheet" href="./styles.css" />
-
-
 </head>
 
-<body class="debug-layout">
-    <header class="site-header">
-        <h1>Group Project Header: Maple Project Stuff Goes Here!</h1>
-        <p class="subtitle">Chapter module demo: Scrollama + D3 pie chart (Our prior helper)</p>
+<body>
+
+    <header class="title-container">
+        <h1 class="noto-serif-title">China's One Child Policy Is Not What You Think.</h1>
     </header>
 
-    <main id="scrolly-root"></main>
+    <main class="story-container">
 
-    <!-- link to js file. script type below has to be 'module' in order to dynamically build -->
+        <!-- Chapter 1 -->
+        <article class="chapter" id="chapter-1">
+            <h2 class="noto-serif-title h2">Chapter 1: The Common Narrative</h2>
+            <div class="text-column">
+                <p class="noto-serif-body">China's one-child policy was officially implemented in 1979, when China's
+                    leadership feared that the country's population will continue to grow rapidly and drain
+                    society's resources. The policy limited most urban families to a single child, sometimes using
+                    brutal reinforcement measures.</p>
+                <br />
+                <p class="noto-serif-body">While it is true that the Chinese population was still growing in the 1970s,
+                    was the policy really justified? Hover on the graph to find out.</p>
+                <div style="height: 60vh;"></div> <!-- Spacer for scrolling simulation -->
+            </div>
+
+            <div class="chart-column">
+                <div class="chart-container" id="chart-mount-1">
+                    <p class="noto-serif-body" style="color: var(--muted);">[Chart 1 Placeholder]</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Chapter 2 -->
+        <article class="chapter" id="chapter-2">
+            <h2 class="noto-serif-title h2">Chapter 2: The Actual Family Planning Years</h2>
+            <div class="text-column">
+                <p class="noto-serif-body">....are from 1976 to 1979. Before the so-called "one-child policy" was
+                    codified into law, Mao lauched various campaigns promoting family planning for families of two
+                    children or less. Through harsh enforcement measures, THIS was China's actual family planning
+                    policy.</p>
+                <br />
+                <p class="noto-serif-body">The corresponding visualization will be dedicated to the right container.</p>
+                <div style="height: 60vh;"></div> <!-- Spacer for scrolling simulation -->
+            </div>
+
+            <div class="chart-column">
+                <div class="chart-container" id="chart-mount-2">
+                    <p class="noto-serif-body" style="color: var(--muted);">[Chart 2 Placeholder]</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- Chapter 3 -->
+        <article class="chapter" id="chapter-3">
+            <h2 class="noto-serif-title h2">Chapter 3: Looking Forward</h2>
+            <div class="text-column">
+                <p class="noto-serif-body">Concluding thoughts and modern perspectives on the demographic shifts in
+                    China.</p>
+                <div style="height: 60vh;"></div> <!-- Spacer for scrolling simulation -->
+            </div>
+
+            <div class="chart-column">
+                <div class="chart-container" id="chart-mount-3">
+                    <p class="noto-serif-body" style="color: var(--muted);">[Chart 3 Placeholder]</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
     <script type="module" src="./main.js"></script>
-
-
 </body>
 
 </html>
