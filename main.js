@@ -64,19 +64,18 @@ async function drawChapter1() {
         .attr("width", 0)
         .attr("height", height);
 
-    // Initial Scales (Focuses on Population data past 1979 first)
+    // Scales
     const xScale = d3.scaleLinear()
         .domain(d3.extent(popData1979, d => d.year))
         .range([0, width]);
 
-    // Apply baseline at 400 Million
     const yScalePop = d3.scaleLinear()
-        .domain([400000000, d3.max(popData, d => d.val)])
+        .domain([400000000, 1600000000])
         .range([height, 0]);
 
-    // Auxiliary Right Scale for Fertility    
+    // Right Scale for Fertility    
     const yScaleFert = d3.scaleLinear()
-        .domain([0, d3.max(fertData, d => d.val)])
+        .domain([0, 8])
         .range([height, 0]);
 
     const lineGenPop = d3.line()
@@ -108,22 +107,22 @@ async function drawChapter1() {
         .style("opacity", 0)
         .call(yAxisFert);
 
-    // Static Labels configured
+    // y axis labels
     svg.append("text")
-        .attr("x", -margin.left)
-        .attr("y", -10)
+        .attr("x", -margin.left + 15)
+        .attr("y", -15)
         .attr("fill", "darkblue")
         .style("font-family", "'Noto Serif', serif")
-        .style("font-weight", "bold")
+        .style("font-size", "0.7rem")
         .text("Population");
 
     const fertLabel = svg.append("text")
-        .attr("x", width - margin.right)
-        .attr("y", -10)
-        .attr("fill", "black")
+        .attr("x", width - margin.right + 15)
+        .attr("y", -15)
+        .attr("fill", "red")
         .style("opacity", 0)
         .style("font-family", "'Noto Serif', serif")
-        .style("font-weight", "bold")
+        .style("font-size", "0.7rem")
         .text("Fertility Rate");
 
     // Container linking to structural clip rects
@@ -148,12 +147,12 @@ async function drawChapter1() {
 
     const fertDrawArea = graphArea.append("g").attr("clip-path", "url(#draw-clip)");
 
-    // Draw Population Base Line. Feeds FULL pop array, relying on clip-path hides left segments
+    // Draw Population Base Line
     const linePop = graphArea.append("path")
         .datum(popData)
         .attr("fill", "none")
         .attr("stroke", "darkblue")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 1.5)
         .attr("d", lineGenPop);
 
     // Draw Fertility lines. Natively visible BUT trapped inside #draw-clip which has width=0 at start
@@ -161,25 +160,26 @@ async function drawChapter1() {
         .datum(fertBefore1979)
         .attr("fill", "none")
         .attr("stroke", "red")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 1.5)
         .attr("d", lineGenFert);
 
     const lineFertBlack = fertDrawArea.append("path")
         .datum(fertAfter1979)
         .attr("fill", "none")
         .attr("stroke", "black")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 1.5)
         .attr("d", lineGenFert);
 
-    // 1979 Vertical Reference Line
+    // 1979 Vertical Reference Line (hidden until fertility is shown)
     const group1979 = graphArea.append("g")
-        .attr("transform", `translate(${xScale(1979)}, 0)`);
+        .attr("transform", `translate(${xScale(1979)}, 0)`)
+        .style("opacity", 0);
 
     group1979.append("line")
         .attr("y1", 0)
         .attr("y2", height)
         .attr("stroke", "var(--muted)")
-        .attr("stroke-width", 1)
+        .attr("stroke-width", 1.5)
         .attr("stroke-dasharray", "4,4");
 
     group1979.append("rect")
@@ -214,7 +214,7 @@ async function drawChapter1() {
         .attr("r", 6)
         .attr("fill", "var(--bg)")
         .attr("stroke", "currentColor")
-        .attr("stroke-width", 3);
+        .attr("stroke-width", 1.5);
 
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
@@ -334,8 +334,9 @@ async function drawChapter1() {
             lineFertRed.transition().duration(1000).attr("d", lineGenFert);
             lineFertBlack.transition().duration(1000).attr("d", lineGenFert);
 
-            // Glide the 1979 vertical line so it stays anchored to 1979
+            // Show and glide the 1979 vertical line so it stays anchored to 1979
             group1979.transition().duration(1000)
+                .style("opacity", 1)
                 .attr("transform", `translate(${xScale(1979)}, 0)`);
 
             // Update shade element position mapping 
@@ -367,8 +368,9 @@ async function drawChapter1() {
             lineFertRed.transition().duration(1000).attr("d", lineGenFert);
             lineFertBlack.transition().duration(1000).attr("d", lineGenFert);
 
-            // Glide the 1979 vertical line back
+            // Hide and glide the 1979 vertical line back
             group1979.transition().duration(1000)
+                .style("opacity", 0)
                 .attr("transform", `translate(${xScale(1979)}, 0)`);
 
             // Sync shade back 
@@ -394,57 +396,259 @@ async function drawChapter1() {
     };
 }
 
+async function drawPyramid() {
+    const pyramidData = await d3.json("manifest.json");
+    const years = [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020, 2024];
+    const ageGroups = ['0-4','5-9','10-14','15-19','20-24','25-29','30-34','35-39',
+                       '40-44','45-49','50-54','55-59','60-64','65-69','70-74','75-79',
+                       '80-84','85-89','90-94','95-99','100+'];
+
+    const container = d3.select("#chart-mount-pyramid");
+    container.html("")
+        .style("display", "flex")
+        .style("flex-direction", "column")
+        .style("justify-content", "flex-start")
+        .style("align-items", "stretch");
+
+    const node = container.node();
+    const totalWidth = node.clientWidth;
+    const totalHeight = node.clientHeight;
+
+    const sliderAreaHeight = 82;
+    const svgHeight = totalHeight - sliderAreaHeight;
+    const svgWidth = totalWidth;
+
+    const margin = { top: 30, right: 14, bottom: 6, left: 14 };
+    const innerWidth = svgWidth - margin.left - margin.right;
+    const innerHeight = svgHeight - margin.top - margin.bottom;
+
+    const centerWidth = 56;
+    const barAreaWidth = (innerWidth - centerWidth) / 2;
+
+    // Fixed global scale so shape comparisons are consistent across years
+    const maxVal = d3.max(years, yr => d3.max(ageGroups, ag => pyramidData[yr][ag]));
+
+    const xScale = d3.scaleLinear()
+        .domain([0, maxVal])
+        .range([0, barAreaWidth]);
+
+    const yScale = d3.scaleBand()
+        .domain(ageGroups)
+        .range([innerHeight, 0])
+        .padding(0.09);
+
+    const svg = container.append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .style("flex-shrink", "0");
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Subtle gridlines + top tick labels
+    const tickVals = xScale.ticks(4).filter(v => v > 0);
+    const fmtM = v => `${(v / 1000).toFixed(0)}M`;
+
+    tickVals.forEach(v => {
+        const lx = barAreaWidth - xScale(v);
+        const rx = barAreaWidth + centerWidth + xScale(v);
+
+        g.append("line").attr("x1", lx).attr("x2", lx).attr("y1", 0).attr("y2", innerHeight)
+            .style("stroke", "var(--border)").style("stroke-width", 0.5).style("stroke-dasharray", "3,3");
+        g.append("line").attr("x1", rx).attr("x2", rx).attr("y1", 0).attr("y2", innerHeight)
+            .style("stroke", "var(--border)").style("stroke-width", 0.5).style("stroke-dasharray", "3,3");
+
+        g.append("text").attr("x", lx).attr("y", 10).attr("text-anchor", "middle")
+            .style("font-family", "'Noto Serif', serif").style("font-size", "0.7rem")
+            .style("fill", "var(--muted)").text(fmtM(v));
+        g.append("text").attr("x", rx).attr("y", 10).attr("text-anchor", "middle")
+            .style("font-family", "'Noto Serif', serif").style("font-size", "0.7rem")
+            .style("fill", "var(--muted)").text(fmtM(v));
+    });
+
+    // Center axis line
+    g.append("line")
+        .attr("x1", barAreaWidth + centerWidth / 2).attr("x2", barAreaWidth + centerWidth / 2)
+        .attr("y1", 0).attr("y2", innerHeight)
+        .style("stroke", "var(--border)").style("stroke-width", 1);
+
+    // Age group labels in center
+    const bw = yScale.bandwidth();
+    ageGroups.forEach(age => {
+        g.append("text")
+            .attr("x", barAreaWidth + centerWidth / 2)
+            .attr("y", yScale(age) + bw / 2 + 4)
+            .attr("text-anchor", "middle")
+            .style("font-family", "'Noto Serif', serif")
+            .style("font-size", Math.min(bw * 0.62, 10) + "px")
+            .style("fill", "var(--ink)")
+            .text(age);
+    });
+
+    // header labels
+    g.append("text").attr("x", barAreaWidth + centerWidth/2).attr("y", -10)
+        .attr("text-anchor", "middle")
+        .style("font-family", "'Noto Serif', serif").style("font-size", "0.7rem")
+        .style("fill", "var(--ink)").text("Age Group");
+
+    g.append("text").attr("x", barAreaWidth / 2).attr("y", -10)
+        .attr("text-anchor", "middle")
+        .style("font-family", "'Noto Serif', serif").style("font-size", "0.7rem")
+        .style("fill", "var(--ink)").text("← Population");
+
+    g.append("text").attr("x", barAreaWidth + centerWidth + barAreaWidth / 2).attr("y", -10)
+        .attr("text-anchor", "middle")
+        .style("font-family", "'Noto Serif', serif").style("font-size", "0.7rem")
+        .style("fill", "var(--ink)").text("Population →");
+
+
+    // Left bars (extend left from barAreaWidth)
+    const leftGroup = g.append("g").attr("transform", `translate(${barAreaWidth},0)`);
+    const leftBars = leftGroup.selectAll("rect")
+        .data(ageGroups).join("rect")
+        .attr("y", d => yScale(d)).attr("height", bw)
+        .attr("x", 0).attr("width", 0)
+        .attr("fill", "#a71616").attr("rx", 1.5).attr("opacity", 0.82);
+
+    // Right bars (extend right from barAreaWidth + centerWidth)
+    const rightGroup = g.append("g").attr("transform", `translate(${barAreaWidth + centerWidth},0)`);
+    const rightBars = rightGroup.selectAll("rect")
+        .data(ageGroups).join("rect")
+        .attr("y", d => yScale(d)).attr("height", bw)
+        .attr("x", 0).attr("width", 0)
+        .attr("fill", "#a71616").attr("rx", 1.5).attr("opacity", 0.82);
+
+    function update(year, animate = true) {
+        const data = pyramidData[year];
+        const dur = animate ? 650 : 0;
+
+        leftBars.transition().duration(dur).ease(d3.easeCubicInOut)
+            .attr("x", d => -xScale(data[d]))
+            .attr("width", d => xScale(data[d]));
+
+        rightBars.transition().duration(dur).ease(d3.easeCubicInOut)
+            .attr("width", d => xScale(data[d]));
+    }
+
+    // Slider area
+    const sliderDiv = container.append("div")
+        .style("flex", "none")
+        .style("height", sliderAreaHeight + "px")
+        .style("padding", "10px 20px 6px")
+        .style("display", "flex")
+        .style("flex-direction", "column")
+        .style("align-items", "center")
+        .style("box-sizing", "border-box")
+        .style("border-top", "1px solid var(--border)");
+
+    const yearDisplay = sliderDiv.append("div")
+        .style("font-family", "'Noto Serif', serif")
+        .style("font-size", "1.5rem")
+        .style("font-weight", "700")
+        .style("color", "var(--ink)")
+        .style("line-height", "1")
+        .style("margin-bottom", "3px")
+        .text("1950");
+
+    const sliderWrap = sliderDiv.append("div").style("width", "100%");
+
+    sliderWrap.append("input")
+        .attr("type", "range").attr("min", 0).attr("max", years.length - 1)
+        .attr("value", 0).attr("step", 1)
+        .style("width", "100%").style("cursor", "pointer").style("accent-color", "#a71616")
+        .on("input", function () {
+            const yr = years[+this.value];
+            yearDisplay.text(yr);
+            update(yr);
+        });
+
+    const ticksRow = sliderWrap.append("div")
+        .style("display", "flex").style("justify-content", "space-between")
+        .style("margin-top", "-8px");
+    years.forEach(yr => {
+        ticksRow.append("span")
+            .style("font-family", "'Noto Serif', serif")
+            .style("font-size", "0.58rem").style("color", "var(--muted)").text(yr);
+    });
+
+    update(1950, false);
+
+    return {
+        show: () => {
+            d3.select("#chart-mount-pyramid").transition().duration(500)
+                .style("opacity", 1).style("pointer-events", "all");
+            d3.select("#chart-mount-1").transition().duration(500)
+                .style("opacity", 0).style("pointer-events", "none");
+        },
+        hide: () => {
+            d3.select("#chart-mount-pyramid").transition().duration(500)
+                .style("opacity", 0).style("pointer-events", "none");
+            d3.select("#chart-mount-1").transition().duration(500)
+                .style("opacity", 1).style("pointer-events", "all");
+        }
+    };
+}
+
 async function initScrollyTelling() {
     // Generate Chapter 1 logic and pull animation interfaces
     const chapter1Actions = await drawChapter1();
+    const pyramidActions = await drawPyramid();
 
     const scroller = scrollama();
 
     scroller
         .setup({
             step: ".step",
-            offset: 0.5, // trigger at 50% of screen height
+            offset: 0.5,
             debug: false
         })
         .onStepEnter((response) => {
-            // Highlight active step text
             d3.select(response.element).classed("is-active", true);
 
             const index = +d3.select(response.element).attr("data-index");
 
-            // Chapter 1 Map interactions
             if (index === 0 || index === 1) {
                 chapter1Actions.showPopulation();
-                chapter1Actions.toggleShade(false);
+                chapter1Actions.toggleShade1960s(false);
+                chapter1Actions.toggleShade1970s(false);
+                pyramidActions.hide();
             } else if (index === 2) {
                 chapter1Actions.showFertility();
-                chapter1Actions.toggleShade(false);
+                chapter1Actions.toggleShade1960s(false);
+                chapter1Actions.toggleShade1970s(false);
+                pyramidActions.hide();
             } else if (index === 3) {
                 chapter1Actions.showFertility();
                 chapter1Actions.toggleShade1960s(true);
+                pyramidActions.hide();
             } else if (index === 4) {
                 chapter1Actions.showFertility();
                 chapter1Actions.toggleShade1960s(false);
                 chapter1Actions.toggleShade1970s(true);
+                pyramidActions.hide();
             } else if (index >= 5) {
-                // Keep the chart in the Fertility expanded state when hitting chapter 2/3
                 chapter1Actions.showFertility();
                 chapter1Actions.toggleShade1960s(false);
                 chapter1Actions.toggleShade1970s(false);
+                pyramidActions.show();
             }
         })
         .onStepExit((response) => {
-            // Dim inactive step text
             d3.select(response.element).classed("is-active", false);
 
             const index = +d3.select(response.element).attr("data-index");
 
-            // Failsafe: if scrolling above index 1, make sure base graph restores
             if ((index === 0 || index === 1) && response.direction === 'up') {
                 chapter1Actions.showPopulation();
             }
             if (index === 3 && response.direction === 'up') {
                 chapter1Actions.toggleShade1960s(false);
+            }
+            if (index === 4 && response.direction === 'up') {
+                chapter1Actions.toggleShade1970s(false);
+            }
+            if (index === 5 && response.direction === 'up') {
+                pyramidActions.hide();
             }
         });
 
