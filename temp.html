@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Trend of Chinese Population</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+
+        #chart-container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .axis-label {
+            font-size: 16px;
+        }
+
+        .tick text {
+            font-size: 14px;
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        .source-text {
+            font-size: 14px;
+        }
+
+        .line {
+            fill: none;
+            stroke: black;
+            stroke-width: 1.5;
+        }
+
+        .domain,
+        .tick line {
+            stroke: black;
+            stroke-width: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="chart-container">
+        <div id="dataviz"></div>
+    </div>
+
+    <script>
+        // 1. Setup dimensions and margins
+        const margin = { top: 50, right: 30, bottom: 70, left: 80 },
+            width = 800 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        // Append the svg object to the div
+        const svg = d3.select("#dataviz")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // 2. Approximate Data points derived from the image
+        const data = [
+            { year: -2000, pop: 10 },
+            { year: -1000, pop: 15 },
+            { year: -500, pop: 20 },
+            { year: -200, pop: 15 },
+            { year: 0, pop: 25 },
+            { year: 150, pop: 75 },
+            { year: 300, pop: 35 },
+            { year: 450, pop: 25 },
+            { year: 550, pop: 50 },
+            { year: 650, pop: 45 },
+            { year: 700, pop: 60 },
+            { year: 800, pop: 30 },
+            { year: 1000, pop: 25 },
+            { year: 1200, pop: 85 },
+            { year: 1300, pop: 65 },
+            { year: 1400, pop: 70 },
+            { year: 1500, pop: 55 },
+            { year: 1650, pop: 55 },
+            { year: 1750, pop: 250 },
+            { year: 1800, pop: 350 },
+            { year: 1850, pop: 450 },
+            { year: 1900, pop: 520 },
+            { year: 1950, pop: 800 },
+            { year: 1980, pop: 1000 }
+        ];
+
+        // 3. X and Y Scales
+        const x = d3.scaleLinear()
+            .domain([-2000, 2000]) // Range from 2000 BC to 2000 AD
+            .range([0, width]);
+
+        const y = d3.scaleLinear()
+            .domain([0, 1000])
+            .range([height, 0]);
+
+        // 4. Draw the bounding box (resembling the print graph)
+        svg.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1.5);
+
+        // 5. Add X Axis
+        const xAxisTicks = [-2000, -1000, -500, 0, 500, 1000, 1500, 2000];
+        const xAxis = d3.axisBottom(x)
+            .tickValues(xAxisTicks)
+            .tickFormat(d => {
+                if (d === -2000) return "2000 BC";
+                if (d === 500) return "AD 500";
+                return Math.abs(d).toString();
+            })
+            .tickSize(-6); // Ticks point inward slightly to match the image
+
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(xAxis)
+            .call(g => g.select(".domain").remove()) // Remove standard axis line to rely on bounding box
+            .call(g => g.selectAll(".tick text").attr("dy", 15)); // Adjust text spacing
+
+        // 6. Add Y Axis
+        const yAxisTicks = [70, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+        const yAxis = d3.axisLeft(y)
+            .tickValues(yAxisTicks)
+            .tickFormat(d3.format(","))
+            .tickSize(-6); // Inward ticks
+
+        svg.append("g")
+            .call(yAxis)
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll(".tick text").attr("dx", -5));
+
+        // 7. Add Labels and Titles
+        // Y-axis Label
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -margin.left + 20)
+            .attr("x", -(height / 2))
+            .attr("text-anchor", "middle")
+            .text("Population (millions)");
+
+        // Main Title (Top Left Aligned)
+        svg.append("text")
+            .attr("class", "title")
+            .attr("x", -margin.left + 20)
+            .attr("y", -margin.top + 20)
+            .text("FIGURE 1    Estimated historical trend of Chinese population,");
+
+        svg.append("text")
+            .attr("class", "title")
+            .attr("x", -margin.left + 20)
+            .attr("y", -margin.top + 40)
+            .text("2000 BC - AD 1980");
+
+        // Source Text
+        svg.append("text")
+            .attr("class", "source-text")
+            .attr("x", -margin.left + 20)
+            .attr("y", height + margin.bottom - 10)
+            .text("SOURCE: Song, Tuan, and Yu 1985: 2.");
+
+        // 8. Draw the Line
+        const line = d3.line()
+            .x(d => x(d.year))
+            .y(d => y(d.pop))
+            .curve(d3.curveLinear); // Linear connections exactly like the original
+
+        svg.append("path")
+            .datum(data)
+            .attr("class", "line")
+            .attr("d", line);
+
+    </script>
+</body>
+
+</html>
