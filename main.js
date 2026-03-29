@@ -548,7 +548,7 @@ async function drawPyramid() {
         .style("color", "var(--ink)")
         .style("line-height", "1")
         .style("margin-bottom", "3px")
-        .text("1950");
+        .text("Chinese Population in 1950");
 
     const sliderWrap = sliderDiv.append("div").style("width", "100%");
 
@@ -558,7 +558,7 @@ async function drawPyramid() {
         .style("width", "100%").style("cursor", "pointer").style("accent-color", "#a71616")
         .on("input", function () {
             const yr = years[+this.value];
-            yearDisplay.text(yr);
+            yearDisplay.text(`Chinese Population in ${yr}`);
             update(yr);
         });
 
